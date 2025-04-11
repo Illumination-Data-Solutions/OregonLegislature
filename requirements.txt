@@ -1,0 +1,6 @@
+beautifulsoup4==4.13.3
+pandas==2.2.3
+Requests==2.32.3
+semantic_kernel==1.28.0
+tqdm==4.67.1
+ollama
