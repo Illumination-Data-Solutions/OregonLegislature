@@ -6,6 +6,7 @@ from semantic_kernel.connectors.ai.ollama import OllamaChatCompletion
 from semantic_kernel.connectors.ai.ollama.ollama_prompt_execution_settings import OllamaChatPromptExecutionSettings
 from semantic_kernel.prompt_template import PromptTemplateConfig
 from tqdm import tqdm
+import pandas as pd
 
 class Law_Agent:
     async def find_submission_deadlines(self, policy_list, output_path):
@@ -36,10 +37,15 @@ class Law_Agent:
 
         async def get_submission_deadline(kernel, policy):
             prompt = f"Given a policy find deadlines and the commities due to and who is responsible for submitting them. return them in the following format 'deadline, due to, from'  if there are no deadlines return 'no deadlines'. Do not add any other text. The policy is: {policy}"
-            print(f"Prompt: {prompt}")
+            # print(f"Prompt: {prompt}")
+            # polocy number is ther first 7 characters
             add_function_to_kernel(kernel, "policy_deadlines", "policy_deadlines_plugin", prompt, OllamaChatPromptExecutionSettings())
             response = await get_response(kernel, "policy_deadlines", "policy_deadlines_plugin", prompt)
-            print(f"Response: {response}")
+            if len(response) < 50:
+                print(f"Response: {response}")
+            else:
+                print(f"Response: {response[:50]}...")
+
             print('' * 50)
             return response
 
@@ -47,10 +53,29 @@ class Law_Agent:
         deadlines = []
         # for pol in policy_list:
         for pol in tqdm(policy_list, desc="Processing policies", unit="policy"):
-            dl = await get_submission_deadline(kernel, pol)
-            deadlines.append(dl)
-        with open(output_path, 'w') as output_file:
-            output_file.write(deadlines)
+            dl_found = False
+            times = 0
+            while not dl_found and times < 2:
+                dl = await get_submission_deadline(kernel, pol)
+                if dl == 'no deadlines':
+                    dl_found = True
+                if dl != 'no deadlines':
+                    policy_number = pol[:7]
+                    out_list = []
+                    out_list.append(policy_number)
+                    # append each  dl.strip().split(',') to out_list
+                    for d in dl.split(','):
+                        out_list.append(d.strip())
+
+                    if len(out_list) == 4:
+                        dl_found = True
+                        deadlines.append(out_list)
+                    else:
+                        dl_found = True
+            if times > 2:
+                print(f"Could not find deadlines for policy: {pol[50:]}") # don't write dl out
+            else: # write deadlines out
+                pd.DataFrame(deadlines, columns=['policy_number', 'deadline', 'due _to', 'from']).to_csv(output_path, index=False)
 
         return deadlines
 

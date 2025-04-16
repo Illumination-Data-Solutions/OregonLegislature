@@ -42,4 +42,6 @@ if current_policy:
     policy_list.append(" ".join(current_policy))
 
 import Law_Agent
-Law_Agent.process_policy_deadlines(policy_list, '/home/user/DataspellProjects/OregonLegislature')
+Law_Agent.process_policy_deadlines(policy_list, '/home/user/DataspellProjects/OregonLegislature/policy_deadlines.csv')
+
+# Processing policies:  40%|████      | 54/134 [2:37:03<4:28:00, 201.00s/policy]Response: no deadlines
