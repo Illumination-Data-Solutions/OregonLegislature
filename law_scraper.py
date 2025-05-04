@@ -1,7 +1,8 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import pandas as pd
-import Law_Agent
+# import Law_Agent
+import re
 
 def fetch_page_content(url):
     """
@@ -38,11 +39,12 @@ def parse_policies(html_content):
 
     return policy_list
 
-def save_policy_deadlines(policy_list, output_path):
+def get_policy_deadlines(policy_list, pattern):
     """
     Process policies and save deadlines to a CSV file.
     """
-    Law_Agent.process_policy_deadlines(policy_list, output_path)
+    regex = re.compile(pattern, re.IGNORECASE)
+    return [match.group(1) for item in policy_list if (match := regex.search(item))]
 
 def main():
     """
@@ -55,8 +57,10 @@ def main():
     html_content = fetch_page_content(url)
     policy_list = parse_policies(html_content)
 
-    # Process and save policy deadlines
-    save_policy_deadlines(policy_list, output_path)
-
+    # Process policy deadlines
+    result = get_policy_deadlines(policy_list, r"\b(?:no later than|on or before)\s(.*)")
+    print(result)
+    print(len(result))
+    
 if __name__ == '__main__':
     main()
