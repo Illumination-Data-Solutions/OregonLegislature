@@ -57,10 +57,9 @@ def main():
     html_content = fetch_page_content(url)
     policy_list = parse_policies(html_content)
 
-    # Process policy deadlines
+    # Process policy deadlines, missing 7 out of the 22 instances of deadline tags
     result = get_policy_deadlines(policy_list, r"\b(?:no later than|on or before)\s(.*)")
     print(result)
-    print(len(result))
     
 if __name__ == '__main__':
     main()
